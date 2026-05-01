@@ -13,7 +13,6 @@ services:
   hermes:
     build: .
     image: hermes-docker:latest
-    container_name: hermes
     restart: unless-stopped
     # Shared memory for Playwright/Chromium (browser toolset).
     shm_size: "1g"
