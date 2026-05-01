@@ -1,0 +1,105 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Hermes Agent — base configuration for hermes-docker
+#
+# Secrets (API keys, bot tokens, allowed-user lists) are NOT stored here.
+# Pass them as environment variables at runtime — see .env.example.
+#
+# To enable additional toolsets, add their names to platform_toolsets and
+# rebuild the image (or mount a customised config.yaml at /opt/data/config.yaml).
+#
+# Run `hermes chat --list-toolsets` inside the container to see every
+# available toolset and the tools it provides.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+# provider: "auto" detects the active provider from the API keys present in
+# the environment.  Pass at least one provider key (e.g. OPENROUTER_API_KEY,
+# ANTHROPIC_API_KEY, OPENAI_API_KEY) — see .env.example for the full list.
+model:
+  provider: "auto"
+  default: "anthropic/claude-opus-4.6"
+
+# =============================================================================
+# Terminal Backend
+# =============================================================================
+terminal:
+  backend: "local"
+  cwd: "."
+  timeout: 180
+
+# =============================================================================
+# Browser Tool
+# =============================================================================
+# Playwright/Chromium is pre-installed in the image and runs headlessly.
+# Add --shm-size=1g to `docker run` (or shm_size in docker-compose.yml) to
+# prevent Chromium from crashing on memory-constrained hosts.
+browser:
+  inactivity_timeout: 120
+
+# =============================================================================
+# Platform Toolsets
+# =============================================================================
+# Controls which tools the agent has access to on each platform.
+# This is the first-iteration base set: web search/browsing, task planning,
+# persistent memory, and skills.
+#
+# To add more toolsets, append their names to the lists below and rebuild:
+#
+#   terminal     — shell command execution (terminal, process)
+#   file         — file read/write/patch/search
+#   vision       — image analysis        (requires OPENROUTER_API_KEY or GOOGLE_API_KEY)
+#   image_gen    — image generation      (requires FAL_KEY)
+#   tts          — text-to-speech        (Edge TTS is free; ElevenLabs/OpenAI optional)
+#   cronjob      — scheduled/cron tasks
+#   code_execution — sandboxed code execution
+#   delegation   — spawn parallel sub-agents
+#   session_search — search past conversation history
+#
+# Full list: run `hermes chat --list-toolsets` inside the container.
+platform_toolsets:
+  cli:      [web, browser, todo, memory, skills]
+  telegram: [web, browser, todo, memory, skills]
+  discord:  [web, browser, todo, memory, skills]
+
+# =============================================================================
+# Persistent Memory
+# =============================================================================
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 2200   # ~800 tokens
+  user_char_limit: 1375     # ~500 tokens
+  nudge_interval: 10
+  flush_min_turns: 6
+
+# =============================================================================
+# Session Reset (Messaging Platforms)
+# =============================================================================
+# Automatically clear sessions after inactivity or at a daily boundary to
+# control API costs.  Users can always /reset manually.
+session_reset:
+  mode: both         # "both" | "idle" | "daily" | "none"
+  idle_minutes: 1440 # 24 hours
+  at_hour: 4         # 4 AM local time
+
+# Per-user session isolation in group/channel chats (recommended default).
+group_sessions_per_user: true
+
+# =============================================================================
+# Context Compression
+# =============================================================================
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+  protect_last_n: 20
+
+# =============================================================================
+# Agent Behaviour
+# =============================================================================
+agent:
+  max_turns: 60
+  verbose: false
+  reasoning_effort: "medium"

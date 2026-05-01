@@ -1,0 +1,51 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — Hermes Agent gateway (Telegram + Discord)
+#
+# Usage:
+#   cp .env.example .env        # fill in API keys and bot tokens
+#   docker compose up -d        # start the gateway
+#   docker compose logs -f      # tail logs
+#
+# For the first-run setup wizard (interactive, one-time):
+#   docker compose run --rm hermes setup
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  hermes:
+    build: .
+    image: hermes-docker:latest
+    restart: unless-stopped
+    # Shared memory for Playwright/Chromium (browser toolset).
+    shm_size: "1g"
+    environment:
+      # ── LLM Provider ──────────────────────────────────────────────────────
+      # Uncomment the key(s) matching your chosen provider.
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      # - NOUS_API_KEY=${NOUS_API_KEY}
+
+      # ── Telegram ──────────────────────────────────────────────────────────
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS}
+      # - TELEGRAM_HOME_CHANNEL=${TELEGRAM_HOME_CHANNEL}
+
+      # ── Discord ───────────────────────────────────────────────────────────
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_ALLOWED_USERS=${DISCORD_ALLOWED_USERS}
+      # - DISCORD_HOME_CHANNEL=${DISCORD_HOME_CHANNEL}
+
+      # ── Optional Tool Keys ────────────────────────────────────────────────
+      # Uncomment as you enable additional toolsets in config.yaml:
+      # - FAL_KEY=${FAL_KEY}              # image_gen toolset
+      # - EXA_API_KEY=${EXA_API_KEY}      # enhanced web search
+      # - GROQ_API_KEY=${GROQ_API_KEY}    # voice transcription (STT)
+    # Port 8642 exposes the OpenAI-compatible API server and health endpoint.
+    # Uncomment only if you need external API access or the dashboard service.
+    # ports:
+    #   - "127.0.0.1:8642:8642"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "2.0"
